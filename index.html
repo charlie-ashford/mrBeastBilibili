@@ -127,6 +127,7 @@
   <h2 id="profile-username">@mrbeast</h2>
   <div id="followers-count" class="odometer"></div>
   <div class="next-goal" id="next-goal"><strong>Next Goal:</strong> </div>
+  <div class="next-goal" id="time-until-next-goal"><strong>Est. Time Of Goal:</strong> Calculating...</div>
   <div class="progress-bar-container">
     <div class="progress-bar" id="progress-bar"></div>
   </div>
@@ -138,6 +139,8 @@
 <script src="https://cdn.jsdelivr.net/npm/odometer/odometer.min.js"></script>
 <script>
 let confettiStarted = false;
+let lastFollowersCount = 0;
+let lastUpdateTime = new Date();
 
 async function fetchBilibiliData() {
   const apiUrl = 'https://mbbb.stats100.xyz/';
@@ -150,6 +153,7 @@ async function fetchBilibiliData() {
       odometerElement.innerHTML = followersCount;
       const { nextGoal, previousGoalUpdated } = getNextGoal(followersCount);
       updateProgressBar(followersCount, nextGoal, previousGoalUpdated);
+      estimateTimeUntilGoal(followersCount, nextGoal); 
       if (nextGoal !== null) {
         document.getElementById('next-goal').innerHTML = `<strong>Next Goal:</strong> ${nextGoal.toLocaleString()}`;
       }
@@ -200,6 +204,45 @@ function updateProgressBar(currentCount, nextGoal, previousGoalUpdated) {
   const progressBarStart = previousGoalUpdated;
   const percentage = ((currentCount - progressBarStart) / (nextGoal - progressBarStart)) * 100;
   progressBar.style.width = `${percentage}%`;
+}
+
+function estimateTimeUntilGoal(currentCount, nextGoal) {
+  if (lastFollowersCount === 0) {
+    document.getElementById('time-until-next-goal').innerHTML = `<strong>Est. Time Of Goal:</strong> Calculating...`;
+    lastFollowersCount = currentCount;
+    lastUpdateTime = new Date();
+    return;
+  }
+
+  const timeDiffMs = new Date() - lastUpdateTime;
+  const rateOfIncrease = (currentCount - lastFollowersCount) / (timeDiffMs / 60000);
+
+  if (rateOfIncrease <= 0) {
+    lastFollowersCount = currentCount;
+    lastUpdateTime = new Date();
+    return;
+  }
+
+  const followersNeeded = nextGoal - currentCount;
+  const timeInMinutes = followersNeeded / rateOfIncrease;
+  const currentTime = new Date();
+  const estimatedTime = new Date(currentTime.getTime() + timeInMinutes * 60000);
+
+  if (currentCount > nextGoal) {
+    if (!confettiStarted) {
+      startConfetti();
+      confettiStarted = true;
+      updateGoal(nextGoal);
+    }
+    document.getElementById('time-until-next-goal').innerHTML = `<strong>Est. Time Of Goal:</strong> Reached`;
+  } else {
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+    const formattedTime = estimatedTime.toLocaleString([], options);
+    document.getElementById('time-until-next-goal').innerHTML = `<strong>Est. Time Of Goal:</strong> ${formattedTime}`;
+  }
+
+  lastFollowersCount = currentCount;
+  lastUpdateTime = new Date();
 }
 
 function adjustButtonPosition() {
