@@ -1,292 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MrBeast Bilibili Statistics</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/odometer/themes/odometer-theme-minimal.css"/>
-<style>
-  body {
-    font-family: 'Inter', sans-serif;
-    background-color: #121212;
-    color: #ccc;
-    text-align: center;
-  }
-  a {
-    color: #4a90e2;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-  .profile {
-    margin-top: 40px;
-    max-width: 100%;
-    margin: 0 auto;
-    background: #1e1e1e;
-    border-radius: 18px;
-    box-shadow: 0 9px 18px rgba(0,0,0,0.5);
-    transition: all 0.3s ease;
-  }
-  .profile:hover {
-    box-shadow: 0 13.5px 27px rgba(0,0,0,0.75);
-  }
-  .profile-img {
-    margin-top: 10px;
-    width: 100%;
-    object-fit: contain;
-  }
-  .profile-img {
-    width: 135px;
-    height: 135px;
-    border-radius: 45%;
-    border: 7.2px solid #333;
-    box-shadow: 0 5.4px 10.8px rgba(0,0,0,0.5);
-  }
-  .odometer {
-    font-size: 2.7rem;
-    font-weight: 900;
-    text-shadow: 1.8px 1.8px 3.6px #000;
-    margin: 9px 0 18px;
-  }
-  .next-goal {
-    font-size: 1.35rem;
-    color: #ccc;
-    margin-top: 18px;
-  }
-  .next-goal strong {
-    font-weight: bold;
-  }
-  .progress-bar-container {
-    width: 72%;
-    margin: 18px auto;
-    background-color: #333;
-    border-radius: 9px;
-    overflow: hidden;
-  }
-  .progress-bar {
-    height: 18px;
-    background-color: #4a90e2;
-    width: 0;
-    transition: width 0.3s ease;
-  }
-  .test-button {
-    padding: 9px 18px;
-    font-size: 12.6px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 7.2px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    position: fixed;
-    right: 18px;
-  }
-  .test-button-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 18px;
-  }
-  @media (min-width: 768px) {
-    .profile {
-      margin-top: 40px;
-      max-width: 720px;
-      padding: 10px 20px 10px 20px;
-    }
-    .profile-img {
-      margin-top: 10px;
-      width: 162px;
-      height: 162px;
-      border: 7.2px solid #333;
-    }
-    .odometer {
-      font-size: 72px;
-    }
-    .next-goal {
-      font-size: 1.8rem;
-    }
-    .test-button {
-      position: absolute;
-      bottom: 18px;
-    }
-    .test-button-container {
-      position: flex;
-      justify-content: center;
-      margin-top: 18px;
-    }
-  }
-</style>
-</head>
-<body>
-  <div class="profile">
-    <img class="profile-img" id="profile-image" src="https://yt3.ggpht.com/fxGKYucJAVme-Yz4fsdCroCFCrANWqw0ql4GYuvx8Uq4l_euNJHgE-w9MTkLQA805vWCi-kE0g=s800-c-k-c0x00ffffff-no-rj" alt="Profile Picture">  
-  <h1><a href="https://space.bilibili.com/1027737427" id="profile-name" target="_blank">MrBeast</a></h1>
-  <h2 id="profile-username">@mrbeast</h2>
-  <div id="followers-count" class="odometer"></div>
-  <div class="next-goal" id="next-goal"><strong>Next Goal:</strong> </div>
-  <div class="next-goal" id="time-until-next-goal"><strong>Est. Time Of Goal:</strong> Calculating...</div>
-  <div class="progress-bar-container">
-    <div class="progress-bar" id="progress-bar"></div>
-  </div>
-  <div class="test-button-container">
-    <button class="test-button" onclick="startConfetti()">Test Confetti</button>
-  </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/odometer/odometer.min.js"></script>
-<script>
-let confettiStarted = false;
-let lastFollowersCount = 0;
-let lastUpdateTime = new Date();
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MrBeast Bilibili Statistics</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/odometer/themes/odometer-theme-minimal.css"
+    />
+    <link
+      rel="icon"
+      href="https://api.communitrics.com/youtube/profile?channel=@mrbeast"
+      type="image/png"
+    />
 
-async function fetchBilibiliData() {
-  const apiUrl = 'https://mbbb.stats100.xyz/';
-  const response = await fetch(apiUrl);
-  try {
-    const data = await response.json();
-    if (data && data.data && data.data.data && data.data.data.follower !== undefined) {
-      const followersCount = data.data.data.follower;
-      const odometerElement = document.getElementById('followers-count');
-      odometerElement.innerHTML = followersCount;
-      const { nextGoal, previousGoalUpdated } = getNextGoal(followersCount);
-      updateProgressBar(followersCount, nextGoal, previousGoalUpdated);
-      estimateTimeUntilGoal(followersCount, nextGoal); 
-      if (nextGoal !== null) {
-        document.getElementById('next-goal').innerHTML = `<strong>Next Goal:</strong> ${nextGoal.toLocaleString()}`;
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #121212;
+        color: #ccc;
+        text-align: center;
       }
-      if (followersCount >= previousGoalUpdated) {
-        if (nextGoal !== null && followersCount >= nextGoal && !confettiStarted) {
-          startConfetti();
-          confettiStarted = true;
-          updateGoal(nextGoal);
+      a {
+        color: #4a90e2;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .profile {
+        margin-top: 40px;
+        max-width: 100%;
+        margin: 0 auto;
+        background: #1e1e1e;
+        border-radius: 18px;
+        box-shadow: 0 9px 18px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+      }
+      .profile:hover {
+        box-shadow: 0 13.5px 27px rgba(0, 0, 0, 0.75);
+      }
+      .profile-img {
+        margin-top: 10px;
+        width: 100%;
+        object-fit: contain;
+      }
+      .profile-img {
+        width: 135px;
+        height: 135px;
+        border-radius: 45%;
+        border: 7.2px solid #333;
+        box-shadow: 0 5.4px 10.8px rgba(0, 0, 0, 0.5);
+      }
+      .odometer {
+        font-size: 2.7rem;
+        font-weight: 900;
+        text-shadow: 1.8px 1.8px 3.6px #000;
+        margin: 9px 0 18px;
+      }
+      .next-goal {
+        font-size: 1.35rem;
+        color: #ccc;
+        margin-top: 18px;
+      }
+      .next-goal strong {
+        font-weight: bold;
+      }
+      .progress-bar-container {
+        width: 72%;
+        margin: 18px auto;
+        background-color: #333;
+        border-radius: 9px;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 18px;
+        background-color: #4a90e2;
+        width: 0;
+        transition: width 0.3s ease;
+      }
+      .test-button {
+        padding: 9px 18px;
+        font-size: 12.6px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 7.2px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        position: fixed;
+        right: 18px;
+      }
+      .test-button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 18px;
+      }
+      @media (min-width: 768px) {
+        .profile {
+          margin-top: 40px;
+          max-width: 720px;
+          padding: 10px 20px 10px 20px;
         }
-      } else {
-        confettiStarted = false;
+        .profile-img {
+          margin-top: 10px;
+          width: 162px;
+          height: 162px;
+          border: 7.2px solid #333;
+        }
+        .odometer {
+          font-size: 72px;
+        }
+        .next-goal {
+          font-size: 1.8rem;
+        }
+        .test-button {
+          position: absolute;
+          bottom: 18px;
+        }
+        .test-button-container {
+          position: flex;
+          justify-content: center;
+          margin-top: 18px;
+        }
       }
-      adjustButtonPosition();
-    } else {
-      console.error('Invalid data structure:', data);
-    }
-  } catch (error) {
-    console.error('Error fetching or parsing data:', error);
-  }
-}
+    </style>
+  </head>
+  <body>
+    <div class="profile">
+      <img
+        class="profile-img"
+        id="profile-image"
+        src="https://yt3.ggpht.com/fxGKYucJAVme-Yz4fsdCroCFCrANWqw0ql4GYuvx8Uq4l_euNJHgE-w9MTkLQA805vWCi-kE0g=s800-c-k-c0x00ffffff-no-rj"
+        alt="Profile Picture"
+      />
+      <h1>
+        <a
+          href="https://space.bilibili.com/1027737427"
+          id="profile-name"
+          target="_blank"
+          >MrBeast</a
+        >
+      </h1>
+      <h2 id="profile-username">@mrbeast</h2>
+      <div id="followers-count" class="odometer"></div>
+      <div class="next-goal" id="next-goal"><strong>Next Goal:</strong></div>
+      <div class="next-goal" id="time-until-next-goal">
+        <strong>Est. Time Of Goal:</strong> Calculating...
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="test-button-container">
+        <button class="test-button" onclick="startConfetti()">
+          Test Confetti
+        </button>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/odometer/odometer.min.js"></script>
+    <script>
+      let confettiStarted = false;
+      let lastFollowersCount = 0;
+      let lastUpdateTime = new Date();
 
-function getNextGoal(followersCount) {
-  let nextGoal;
-  let previousGoalUpdated;
-
-  if (followersCount < 1000000) {
-    nextGoal = Math.ceil((followersCount + 1) / 1000) * 1000;
-    previousGoalUpdated = nextGoal - 1000;
-  } else if (followersCount < 10000000) {
-    nextGoal = Math.ceil((followersCount + 1) / 10000) * 10000;
-    previousGoalUpdated = nextGoal - 10000;
-  } else if (followersCount < 50000000) {
-    nextGoal = Math.ceil((followersCount + 1) / 50000) * 50000;
-    previousGoalUpdated = nextGoal - 50000;
-  } else if (followersCount < 100000000) {
-    nextGoal = Math.ceil((followersCount + 1) / 100000) * 100000;
-    previousGoalUpdated = nextGoal - 100000;
-  } else {
-    nextGoal = Math.ceil((followersCount + 1) / 1000000) * 1000000;
-    previousGoalUpdated = nextGoal - 1000000;
-  }
-
-  return { nextGoal, previousGoalUpdated };
-}
-
-function updateProgressBar(currentCount, nextGoal, previousGoalUpdated) {
-  const progressBar = document.getElementById('progress-bar');
-  const progressBarStart = previousGoalUpdated;
-  const percentage = ((currentCount - progressBarStart) / (nextGoal - progressBarStart)) * 100;
-  progressBar.style.width = `${percentage}%`;
-}
-
-function estimateTimeUntilGoal(currentCount, nextGoal) {
-  if (lastFollowersCount === 0) {
-    document.getElementById('time-until-next-goal').innerHTML = `<strong>Est. Time Of Goal:</strong> Calculating...`;
-    lastFollowersCount = currentCount;
-    lastUpdateTime = new Date();
-    return;
-  }
-
-  const timeDiffMs = new Date() - lastUpdateTime;
-  const rateOfIncrease = (currentCount - lastFollowersCount) / (timeDiffMs / 60000);
-
-  if (rateOfIncrease <= 0) {
-    lastFollowersCount = currentCount;
-    lastUpdateTime = new Date();
-    return;
-  }
-
-  const followersNeeded = nextGoal - currentCount;
-  const timeInMinutes = followersNeeded / rateOfIncrease;
-  const currentTime = new Date();
-  const estimatedTime = new Date(currentTime.getTime() + timeInMinutes * 60000);
-
-  if (currentCount > nextGoal) {
-    if (!confettiStarted) {
-      startConfetti();
-      confettiStarted = true;
-      updateGoal(nextGoal);
-    }
-    document.getElementById('time-until-next-goal').innerHTML = `<strong>Est. Time Of Goal:</strong> Reached`;
-  } else {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-    const formattedTime = estimatedTime.toLocaleString([], options);
-    document.getElementById('time-until-next-goal').innerHTML = `<strong>Est. Time Of Goal:</strong> ${formattedTime}`;
-  }
-
-  lastFollowersCount = currentCount;
-  lastUpdateTime = new Date();
-}
-
-function adjustButtonPosition() {
-  const button = document.querySelector('.test-button');
-  const buttonRect = button.getBoundingClientRect();
-  const windowWidth = window.innerWidth;
-  if (windowWidth < buttonRect.right) {
-    const odometer = document.querySelector('.odometer');
-    odometer.insertAdjacentElement('afterend', button);
-  }
-}
-
-function startConfetti() {
-  if (!confettiStarted) {
-    var duration = 1 * 1000;
-    var animationEnd = Date.now() + duration;
-    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0, scalar: 1.5 };
-
-    function randomInRange(min, max) {
-      return Math.random() * (max - min) + min;
-    }
-
-    var interval = setInterval(function () {
-      var timeLeft = animationEnd - Date.now();
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        confettiStarted = false;
+      async function fetchBilibiliData() {
+        const apiUrl = "https://mbbb.stats100.xyz/";
+        const response = await fetch(apiUrl);
+        try {
+          const data = await response.json();
+          if (
+            data &&
+            data.data &&
+            data.data.data &&
+            data.data.data.follower !== undefined
+          ) {
+            const followersCount = data.data.data.follower;
+            const odometerElement = document.getElementById("followers-count");
+            odometerElement.innerHTML = followersCount;
+            const { nextGoal, previousGoalUpdated } =
+              getNextGoal(followersCount);
+            updateProgressBar(followersCount, nextGoal, previousGoalUpdated);
+            estimateTimeUntilGoal(followersCount, nextGoal);
+            if (nextGoal !== null) {
+              document.getElementById(
+                "next-goal"
+              ).innerHTML = `<strong>Next Goal:</strong> ${nextGoal.toLocaleString()}`;
+            }
+            if (followersCount >= previousGoalUpdated) {
+              if (
+                nextGoal !== null &&
+                followersCount >= nextGoal &&
+                !confettiStarted
+              ) {
+                startConfetti();
+                confettiStarted = true;
+                updateGoal(nextGoal);
+              }
+            } else {
+              confettiStarted = false;
+            }
+            adjustButtonPosition();
+          } else {
+            console.error("Invalid data structure:", data);
+          }
+        } catch (error) {
+          console.error("Error fetching or parsing data:", error);
+        }
       }
 
-      var particleCount = 50 * (timeLeft / duration);
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-      });
-    }, 250);
-  }
-}
+      function getNextGoal(followersCount) {
+        let nextGoal;
+        let previousGoalUpdated;
 
-fetchBilibiliData();
-setInterval(fetchBilibiliData, 2000);
-</script>
-</body>
+        if (followersCount < 1000000) {
+          nextGoal = Math.ceil((followersCount + 1) / 1000) * 1000;
+          previousGoalUpdated = nextGoal - 1000;
+        } else if (followersCount < 10000000) {
+          nextGoal = Math.ceil((followersCount + 1) / 10000) * 10000;
+          previousGoalUpdated = nextGoal - 10000;
+        } else if (followersCount < 50000000) {
+          nextGoal = Math.ceil((followersCount + 1) / 50000) * 50000;
+          previousGoalUpdated = nextGoal - 50000;
+        } else if (followersCount < 100000000) {
+          nextGoal = Math.ceil((followersCount + 1) / 100000) * 100000;
+          previousGoalUpdated = nextGoal - 100000;
+        } else {
+          nextGoal = Math.ceil((followersCount + 1) / 1000000) * 1000000;
+          previousGoalUpdated = nextGoal - 1000000;
+        }
+
+        return { nextGoal, previousGoalUpdated };
+      }
+
+      function updateProgressBar(currentCount, nextGoal, previousGoalUpdated) {
+        const progressBar = document.getElementById("progress-bar");
+        const progressBarStart = previousGoalUpdated;
+        const percentage =
+          ((currentCount - progressBarStart) / (nextGoal - progressBarStart)) *
+          100;
+        progressBar.style.width = `${percentage}%`;
+      }
+
+      function estimateTimeUntilGoal(currentCount, nextGoal) {
+        if (lastFollowersCount === 0) {
+          document.getElementById(
+            "time-until-next-goal"
+          ).innerHTML = `<strong>Est. Time Of Goal:</strong> Calculating...`;
+          lastFollowersCount = currentCount;
+          lastUpdateTime = new Date();
+          return;
+        }
+
+        const timeDiffMs = new Date() - lastUpdateTime;
+        const rateOfIncrease =
+          (currentCount - lastFollowersCount) / (timeDiffMs / 60000);
+
+        if (rateOfIncrease <= 0) {
+          lastFollowersCount = currentCount;
+          lastUpdateTime = new Date();
+          return;
+        }
+
+        const followersNeeded = nextGoal - currentCount;
+        const timeInMinutes = followersNeeded / rateOfIncrease;
+        const currentTime = new Date();
+        const estimatedTime = new Date(
+          currentTime.getTime() + timeInMinutes * 60000
+        );
+
+        if (currentCount > nextGoal) {
+          if (!confettiStarted) {
+            startConfetti();
+            confettiStarted = true;
+            updateGoal(nextGoal);
+          }
+          document.getElementById(
+            "time-until-next-goal"
+          ).innerHTML = `<strong>Est. Time Of Goal:</strong> Reached`;
+        } else {
+          const options = {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+          };
+          const formattedTime = estimatedTime.toLocaleString([], options);
+          document.getElementById(
+            "time-until-next-goal"
+          ).innerHTML = `<strong>Est. Time Of Goal:</strong> ${formattedTime}`;
+        }
+
+        lastFollowersCount = currentCount;
+        lastUpdateTime = new Date();
+      }
+
+      function adjustButtonPosition() {
+        const button = document.querySelector(".test-button");
+        const buttonRect = button.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        if (windowWidth < buttonRect.right) {
+          const odometer = document.querySelector(".odometer");
+          odometer.insertAdjacentElement("afterend", button);
+        }
+      }
+
+      function startConfetti() {
+        if (!confettiStarted) {
+          var duration = 1 * 1000;
+          var animationEnd = Date.now() + duration;
+          var defaults = {
+            startVelocity: 30,
+            spread: 360,
+            ticks: 60,
+            zIndex: 0,
+            scalar: 1.5,
+          };
+
+          function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+          }
+
+          var interval = setInterval(function () {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) {
+              clearInterval(interval);
+              confettiStarted = false;
+            }
+
+            var particleCount = 50 * (timeLeft / duration);
+            confetti({
+              ...defaults,
+              particleCount,
+              origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            });
+            confetti({
+              ...defaults,
+              particleCount,
+              origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            });
+          }, 250);
+        }
+      }
+
+      fetchBilibiliData();
+      setInterval(fetchBilibiliData, 2000);
+    </script>
+  </body>
 </html>
